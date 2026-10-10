@@ -1,0 +1,16 @@
+{
+	"required": true,
+	"package": "fishontracker.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+    "HandledScreenMixin",
+	"CapeOffsetMixin",
+	"SodiumWarningOverlayMixin"
+  ],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

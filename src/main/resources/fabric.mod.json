@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"id": "fishontracker",
+	"version": "${version}",
+	"name": "FishOnTracker",
+	"description": "Tracking Net Worth tool for FishOnMC Server. Seamlessly scans containers and exports to JSON for instant web price tracking.",
+	"authors": [
+		"5E8A"
+	],
+	"contact": {
+		"homepage": "https://5e8a.github.io/FishOnTracker/",
+		"sources": "https://github.com/5E8A/FishOnTracker-Mod"
+	},
+	"custom": {
+    	"modmenu": {
+      		"links": {
+        		"modmenu.modrinth": "https://modrinth.com/mod/fishontracker"
+      		},
+      		"update_checker": true
+    	}
+  	},
+	"license": "LGPL-3.0-only",
+	"icon": "assets/fishontracker/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"fishontracker.Fishontracker"
+		],
+		"client": [
+			"fishontracker.client.FishontrackerClient"
+		],
+		"modmenu": [
+    		"fishontracker.client.compat.ModMenuIntegration"
+  		]
+	},
+	"mixins": [
+		"fishontracker.mixins.json",
+		{
+			"config": "fishontracker.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.1.2",
+		"java": ">=25",
+		"fabric-api": "*",
+		"yet_another_config_lib_v3": ">=3.9.7+26.1-fabric"
+	}
+}

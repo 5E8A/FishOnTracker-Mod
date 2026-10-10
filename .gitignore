@@ -1,0 +1,13 @@
+# Gradle & Build
+.gradle/
+build/
+out/
+bin/
+
+# Fabric / Loom
+.loom/
+.fabric/
+
+# Runtime / Client test data
+run/
+.vscode/settings.json
