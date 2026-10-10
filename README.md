@@ -1,4 +1,7 @@
 **FishOnTracker** is a tool designed to scan all custom items across **FishOnMC** server to get instant net worth value at [FishOnTracker Website](https://5e8a.github.io/FishOnTracker/)
+# ❗Requirements
+- [Fabric API](https://modrinth.com/mod/fabric-api)
+- [YetAnotherConfigLib](https://modrinth.com/mod/yacl)
 # 📖Usage
 1. While on FishOnMC server start scanning by typing **/fot scan start**
 2. Open all chests and virtual containers you wanna include
