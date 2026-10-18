@@ -16,7 +16,6 @@ public class RodPartParser {
     private static final Map<String, String> POLE_TECHS = new HashMap<>();
 
     static {
-        // Reel Gear System Tech
         REEL_TECHS.put("micro precision", "Micro Precision Gears");
         REEL_TECHS.put("duralumin", "Duralumin Gears");
         REEL_TECHS.put("cold forged aluminium", "Cold Forged Aluminium Gears");
@@ -25,7 +24,6 @@ public class RodPartParser {
         REEL_TECHS.put("machined brass", "Machined Brass Gears");
         REEL_TECHS.put("cast brass", "Cast Brass Gears");
 
-        // Pole Blank Tech
         POLE_TECHS.put("toray t1100g", "Toray T1100G Blank");
         POLE_TECHS.put("toray t800", "Toray T800 Blank");
         POLE_TECHS.put("im8 graphite", "IM8 Graphite Blank");
@@ -37,11 +35,11 @@ public class RodPartParser {
 
     public static boolean isRodPart(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        return stack.is(Items.FLINT)          // Reel
-            || stack.is(Items.BLAZE_ROD)      // Pole
-            || stack.is(Items.FEATHER)        // Line
-            || stack.is(Items.BREEZE_ROD)     // BlankTech Mod
-            || stack.is(Items.IRON_NUGGET);   // GearTech Mod
+        return stack.is(Items.FLINT)
+            || stack.is(Items.BLAZE_ROD)
+            || stack.is(Items.FEATHER)
+            || stack.is(Items.BREEZE_ROD)
+            || stack.is(Items.IRON_NUGGET);
     }
 
     public static Map<String, Object> parseRodPart(ItemStack stack) {
@@ -51,7 +49,9 @@ public class RodPartParser {
             String partType = stack.is(Items.BREEZE_ROD) ? "BlankTech" : "GearTech";
             String model = parseCleanName(stack);
 
-            data.put("id", "rod_" + System.currentTimeMillis());
+            String uniqueKey = "rod_" + ScannerManager.normalizeToId(partType + "_" + model);
+
+            data.put("id", uniqueKey);
             data.put("isCustomItem", true);
             data.put("customType", "rod");
             data.put("partType", partType);
@@ -83,8 +83,9 @@ public class RodPartParser {
             finalName += " [" + tech + "]";
         }
 
+        String uniqueKey = "rod_" + ScannerManager.normalizeToId(partType + "_" + model + "_" + tech);
 
-        data.put("id", "rod_" + System.currentTimeMillis());
+        data.put("id", uniqueKey);
         data.put("isCustomItem", true);
         data.put("customType", "rod");
         data.put("partType", partType);
@@ -166,7 +167,6 @@ public class RodPartParser {
         for (String word : words) {
             if (word.isEmpty()) continue;
 
-            // Jeśli słowo zawiera myślnik (np. S-Glass lub Semi-Arid)
             if (word.contains("-")) {
                 String[] subParts = word.split("-");
                 StringBuilder hyphenWord = new StringBuilder();

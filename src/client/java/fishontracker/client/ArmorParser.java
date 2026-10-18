@@ -27,18 +27,14 @@ public class ArmorParser {
 
         String cleanItemName = parseCleanName(stack.getHoverName().getString());
 
-
         String climate = resolveClimate(cleanItemName);
         String piece = resolvePiece(stack, cleanItemName);
-
 
         String rarity = parseRarity(stack);
         int rating = parseRating(stack);
 
-
         String infusionKey = parseInfusionKey(stack);
         String infusionDisplay = resolveInfusionDisplay(infusionKey);
-
 
         StringBuilder nameBuilder = new StringBuilder();
         nameBuilder.append(rarity).append(" ").append(climate).append(" ").append(piece);
@@ -47,8 +43,9 @@ public class ArmorParser {
             nameBuilder.append(" [").append(infusionDisplay).append("]");
         }
 
+        String uniqueKey = "armor_" + ScannerManager.normalizeToId(climate + "_" + piece + "_" + rarity + "_" + rating + "_" + infusionKey);
 
-        data.put("id", "armor_" + System.currentTimeMillis());
+        data.put("id", uniqueKey);
         data.put("isCustomItem", true);
         data.put("customType", "armor");
         data.put("climate", climate);
@@ -90,7 +87,6 @@ public class ArmorParser {
         ItemLore lore = stack.get(DataComponents.LORE);
         if (lore == null || lore.lines().isEmpty()) return "Common";
 
-
         for (Component lineComp : lore.lines()) {
             String raw = lineComp.getString();
             if (raw.contains("\uf037")) return "Mythical";
@@ -99,7 +95,6 @@ public class ArmorParser {
             if (raw.contains("\uf034")) return "Rare";
             if (raw.contains("\uf033")) return "Common";
         }
-
 
         for (int i = 0; i < Math.min(3, lore.lines().size()); i++) {
             String line = cleanText(lore.lines().get(i).getString()).toLowerCase();

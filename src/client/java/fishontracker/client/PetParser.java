@@ -125,7 +125,9 @@ public class PetParser {
             }
         }
 
-        data.put("id", "pet_" + System.currentTimeMillis());
+        String uniqueKey = "pet_" + ScannerManager.normalizeToId(species + "_" + rarity + "_" + rating + "_" + specialStat);
+
+        data.put("id", uniqueKey);
         data.put("isCustomItem", true);
         data.put("customType", "pet");
         data.put("species", species);

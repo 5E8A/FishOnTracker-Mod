@@ -22,7 +22,6 @@ public class TrackerConfig {
 
     public static TrackerConfig INSTANCE = new TrackerConfig();
 
-    // Pola konfiguracyjne:
     public boolean forceCapeFix = true;
     public boolean hideSodiumWarning = true;
 

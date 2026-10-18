@@ -4,13 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,9 +30,8 @@ import java.util.regex.Pattern;
 
 public class ScannerManager {
     public static boolean isScanning = false;
-    private static int containersCount = 0;
-    private static final List<ItemStack> capturedItems = new ArrayList<>();
 
+    private static final Map<String, List<ItemStack>> capturedContainersMap = new LinkedHashMap<>();
     private static final Set<String> scannedContainers = new HashSet<>();
     private static String lastScannedContainerSignature = "";
 
@@ -42,26 +43,25 @@ public class ScannerManager {
         if (isScanning) {
             if (client.player != null) {
                 client.player.sendSystemMessage(
-                    Component.literal("§e⚠ [FOT] Scan session is already running! Use §6/fot scan stop §eto finish.")
+                    Component.literal("§2§l[FOT] §8» §e⚠ Scan session is already running! Use §6/fot scan stop §eto finish.")
                 );
             }
             return;
         }
 
         isScanning = true;
-        containersCount = 0;
-        capturedItems.clear();
+        capturedContainersMap.clear();
         scannedContainers.clear();
         lastScannedContainerSignature = "";
 
         if (client.player != null) {
             client.player.sendSystemMessage(
-                Component.literal("§a✔ [FOT] Scanning session started! Open chests to track items.")
+                Component.literal("§2§l[FOT] §8» §a✔ Scanning session started! Open chests to track items.")
             );
         }
     }
 
-    public static void recordContainer(String containerId, List<ItemStack> items) {
+public static void recordContainer(String containerId, List<ItemStack> items) {
         if (!isScanning || items.isEmpty()) return;
 
         Minecraft client = Minecraft.getInstance();
@@ -69,7 +69,7 @@ public class ScannerManager {
         if (hasRodTitlesItem(items)) {
             if (client.gui != null) {
                 client.gui.setOverlayMessage(
-                    Component.literal("§c✖ [FOT] Skipped: Rod Menu"),
+                    Component.literal("§2§l[FOT] §8» §c✖ Skipped: Rod Menu"),
                     false
                 );
             }
@@ -83,7 +83,9 @@ public class ScannerManager {
         if (isPresetMenu) {
             String[] parts = presetSignature.split(":");
             String cat = parts[1].substring(0, 1).toUpperCase() + parts[1].substring(1);
-            displayTitle = cat + " Presets (" + parts[2] + ")";
+            
+            String rangeLabel = extractPresetRangeLabel(items);
+                displayTitle = cat + " Presets" + (rangeLabel.isEmpty() ? "" : " (" + rangeLabel + ")");
         } else {
             displayTitle = ItemFilter.cleanText(containerId);
             if (displayTitle.isEmpty()) {
@@ -94,7 +96,7 @@ public class ScannerManager {
         if (!isPresetMenu && ItemFilter.isBlacklistedContainerTitle(containerId)) {
             if (client.gui != null) {
                 client.gui.setOverlayMessage(
-                    Component.literal("§c✖ [FOT] Skipped: " + displayTitle),
+                    Component.literal("§2§l[FOT] §8» §c✖ Skipped: " + displayTitle),
                     false
                 );
             }
@@ -106,7 +108,7 @@ public class ScannerManager {
             if (ItemFilter.isCosmeticItem(stack)) {
                 if (client.gui != null) {
                     client.gui.setOverlayMessage(
-                        Component.literal("§c✖ [FOT] Skipped: " + displayTitle + " (Cosmetic/Hat detected)"),
+                        Component.literal("§2§l[FOT] §8» §c✖ Skipped: " + displayTitle + " (Cosmetic/Hat detected)"),
                         false
                     );
                 }
@@ -124,7 +126,7 @@ public class ScannerManager {
             if (ItemFilter.hasBlacklistedName(stack)) {
                 if (client.gui != null) {
                     client.gui.setOverlayMessage(
-                        Component.literal("§c✖ [FOT] Skipped: " + displayTitle + " (Blacklisted item detected!)"),
+                        Component.literal("§2§l[FOT] §8» §c✖ Skipped: " + displayTitle + " (Blacklisted item detected!)"),
                         false
                     );
                 }
@@ -138,7 +140,7 @@ public class ScannerManager {
             if (!containerSignature.equals(lastScannedContainerSignature)) {
                 if (client.gui != null) {
                     client.gui.setOverlayMessage(
-                        Component.literal("§e⚠ [FOT] Already scanned: " + displayTitle),
+                        Component.literal("§2§l[FOT] §8» §e⚠ Already scanned: " + displayTitle),
                         false
                     );
                 }
@@ -149,25 +151,15 @@ public class ScannerManager {
         lastScannedContainerSignature = containerSignature;
         scannedContainers.add(containerSignature);
 
-        containersCount++;
-
-        // Dodajemy przedmioty z weryfikacją duplikatów NBT/Stack
+        List<ItemStack> containerItemsList = new ArrayList<>();
         for (ItemStack stack : items) {
             if (stack == null || stack.isEmpty()) continue;
             if (isPresetControlButton(stack) || isRodTitlesButton(stack)) continue;
 
-            boolean isAlreadyCaptured = false;
-            for (ItemStack captured : capturedItems) {
-                if (ItemStack.matches(captured, stack)) {
-                    isAlreadyCaptured = true;
-                    break;
-                }
-            }
-
-            if (!isAlreadyCaptured) {
-                capturedItems.add(stack.copy());
-            }
+            containerItemsList.add(stack.copy());
         }
+
+        capturedContainersMap.put(containerSignature, containerItemsList);
 
         if (client.gui != null) {
             int totalItemsCount = 0;
@@ -196,10 +188,29 @@ public class ScannerManager {
 
             String itemWord = totalItemsCount == 1 ? "item" : "items";
             client.gui.setOverlayMessage(
-                Component.literal("§a✔ [FOT] Captured: " + displayTitle + " (" + totalItemsCount + " " + itemWord + ")"),
+                Component.literal("§2§l[FOT] §8» §a✔ Captured: " + displayTitle + " (" + totalItemsCount + " " + itemWord + ")"),
                 false
             );
         }
+    }
+
+    private static String extractPresetRangeLabel(List<ItemStack> items) {
+        List<Integer> nums = new ArrayList<>();
+        for (ItemStack stack : items) {
+            if (stack == null || stack.isEmpty()) continue;
+            String cleanName = ItemFilter.cleanText(ItemFilter.getItemEffectiveName(stack));
+            Matcher matcher = PRESET_PATTERN.matcher(cleanName);
+            if (matcher.find()) {
+                try {
+                    int num = Integer.parseInt(matcher.group(1));
+                    if (!nums.contains(num)) nums.add(num);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        if (nums.isEmpty()) return "";
+        nums.sort(Integer::compareTo);
+        if (nums.size() == 1) return String.valueOf(nums.get(0));
+        return nums.get(0) + "-" + nums.get(nums.size() - 1);
     }
 
     private static String resolvePresetSignature(List<ItemStack> items) {
@@ -222,9 +233,10 @@ public class ScannerManager {
                     loreBuilder.append(ItemFilter.cleanText(line.getString())).append(" ");
                 }
             }
-            String combinedText = cleanName + " " + loreBuilder.toString();
+            String combinedText = (cleanName + " " + loreBuilder.toString()).toLowerCase();
 
-            if (combinedText.contains("switch to armor presets") || combinedText.contains("armor presets")) {
+            // Jeśli przycisk proponuje zmianę na Armor Presets -> znaczy, że jesteśmy w Rod Presets!
+            if (combinedText.contains("switch to armor presets")) {
                 isRod = true;
             }
 
@@ -253,7 +265,7 @@ public class ScannerManager {
         int startRange = (pageGroup - 1) * 5 + 1;
         int endRange = pageGroup * 5;
 
-        return "presets:" + type + ":" + startRange + "-" + endRange + ":" + itemsHash.toString().hashCode();
+        return "presets:" + type + ":" + startRange + "-" + endRange;
     }
 
     private static boolean isPresetControlButton(ItemStack stack) {
@@ -290,7 +302,7 @@ public class ScannerManager {
         return false;
     }
 
-    private static net.minecraft.core.BlockPos getCanonicalBlockPos(Minecraft client, net.minecraft.core.BlockPos pos) {
+    private static BlockPos getCanonicalBlockPos(Minecraft client, BlockPos pos) {
         if (client.level == null) return pos;
 
         BlockState state = client.level.getBlockState(pos);
@@ -317,10 +329,10 @@ public class ScannerManager {
             return "vault:" + cleanTitle;
         }
 
-        if (client.hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
-            net.minecraft.core.BlockPos pos = blockHit.getBlockPos();
+        if (client.hitResult instanceof BlockHitResult blockHit) {
+            BlockPos pos = blockHit.getBlockPos();
             if (client.level != null && client.level.getBlockState(pos).hasBlockEntity()) {
-                net.minecraft.core.BlockPos canonicalPos = getCanonicalBlockPos(client, pos);
+                BlockPos canonicalPos = getCanonicalBlockPos(client, pos);
                 return "block:" + canonicalPos.getX() + "_" + canonicalPos.getY() + "_" + canonicalPos.getZ();
             }
         }
@@ -334,7 +346,7 @@ public class ScannerManager {
         if (!isScanning) {
             if (client.player != null) {
                 client.player.sendSystemMessage(
-                    Component.literal("§e⚠ [FOT] No scan session is currently running! Use §6/fot scan start §eto begin.")
+                    Component.literal("§2§l[FOT] §8» §e⚠ No scan session is currently running! Use §2/fot scan start §eto begin.")
                 );
             }
             return;
@@ -345,10 +357,16 @@ public class ScannerManager {
 
         List<Map<String, Object>> exportedList = new ArrayList<>();
         Map<String, Integer> mergedItems = new LinkedHashMap<>();
-        int totalQuantitiesSum = 0;
-        int customItemsCount = 0;
+        Map<String, Map<String, Object>> mergedCustomItems = new LinkedHashMap<>();
 
-        for (ItemStack stack : capturedItems) {
+        int totalQuantitiesSum = 0;
+
+        List<ItemStack> allCapturedItems = new ArrayList<>();
+        for (List<ItemStack> containerList : capturedContainersMap.values()) {
+            allCapturedItems.addAll(containerList);
+        }
+
+        for (ItemStack stack : allCapturedItems) {
             if (stack.isEmpty()) continue;
             if (!ItemFilter.isAllowed(stack)) continue;
 
@@ -358,37 +376,56 @@ public class ScannerManager {
 
             if (RodPartParser.isRodPart(stack)) {
                 Map<String, Object> rodData = RodPartParser.parseRodPart(stack);
-                exportedList.add(rodData);
-                totalQuantitiesSum += stack.getCount();
-                customItemsCount++;
+                String id = (String) rodData.get("id");
+                int qty = stack.getCount();
+
+                if (!mergedCustomItems.containsKey(id)) {
+                    mergedCustomItems.put(id, rodData);
+                    totalQuantitiesSum += qty;
+                }
                 continue;
             }
 
             if (ArmorParser.isArmor(stack)) {
                 Map<String, Object> armorData = ArmorParser.parseArmor(stack);
-                exportedList.add(armorData);
-                totalQuantitiesSum += stack.getCount();
-                customItemsCount++;
+                String id = (String) armorData.get("id");
+                int qty = stack.getCount();
+
+                if (!mergedCustomItems.containsKey(id)) {
+                    mergedCustomItems.put(id, armorData);
+                    totalQuantitiesSum += qty;
+                }
                 continue;
             }
 
             if (SuperchargeParser.isSupercharge(stack)) {
                 Map<String, Object> superchargeData = SuperchargeParser.parseSupercharge(stack);
-                exportedList.add(superchargeData);
-                totalQuantitiesSum += stack.getCount();
-                customItemsCount++;
+                String id = (String) superchargeData.get("id");
+                int qty = stack.getCount();
+
+                if (!mergedCustomItems.containsKey(id)) {
+                    mergedCustomItems.put(id, superchargeData);
+                    totalQuantitiesSum += qty;
+                }
                 continue;
             }
 
             if (PetParser.isPet(stack)) {
                 PetParser.PetParseResult result = PetParser.parsePet(stack);
-                exportedList.add(result.petData);
-                totalQuantitiesSum += stack.getCount();
-                customItemsCount++;
+                String id = (String) result.petData.get("id");
+                int qty = stack.getCount();
 
-                for (Map<String, Object> extraItem : result.attachedItems) {
-                    exportedList.add(extraItem);
-                    totalQuantitiesSum += 1;
+                if (!mergedCustomItems.containsKey(id)) {
+                    mergedCustomItems.put(id, result.petData);
+                    totalQuantitiesSum += qty;
+
+                    for (Map<String, Object> extraItem : result.attachedItems) {
+                        String extraId = (String) extraItem.get("id");
+                        if (extraId != null) {
+                            mergedItems.put(extraId, mergedItems.getOrDefault(extraId, 0) + 1);
+                            totalQuantitiesSum += 1;
+                        }
+                    }
                 }
                 continue;
             }
@@ -433,6 +470,8 @@ public class ScannerManager {
             totalQuantitiesSum += count;
         }
 
+        exportedList.addAll(mergedCustomItems.values());
+
         mergedItems.forEach((id, qty) -> {
             Map<String, Object> itemMap = new LinkedHashMap<>();
             itemMap.put("id", id);
@@ -440,22 +479,36 @@ public class ScannerManager {
             exportedList.add(itemMap);
         });
 
+        long currentCash = ScoreboardReader.getWalletBalance();
+        String username = PlayerDataFetcher.getUsername();
+        int playerLevel = PlayerDataFetcher.getPlayerLevel();
+
+        Map<String, Object> finalExport = new LinkedHashMap<>();
+        finalExport.put("version", "1.1");
+        finalExport.put("username", username);
+        finalExport.put("level", playerLevel);
+        finalExport.put("cash", currentCash);
+        finalExport.put("inventory", exportedList);
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String json = gson.toJson(exportedList);
+        String json = gson.toJson(finalExport);
 
         client.keyboardHandler.setClipboard(json);
         saveToFile(json);
 
-        String containerWord = containersCount == 1 ? "container" : "containers";
+        int finalContainersCount = capturedContainersMap.size();
+
+        String containerWord = finalContainersCount == 1 ? "container" : "containers";
         String itemWord = totalQuantitiesSum == 1 ? "item" : "items";
-        int totalUniqueEntries = mergedItems.size() + customItemsCount;
+        int totalUniqueEntries = mergedCustomItems.size() + mergedItems.size();
 
         client.player.sendSystemMessage(
-            Component.literal("§6[FOT] Scan complete! Recorded " 
-                + containersCount + " " + containerWord + " (" + totalQuantitiesSum + " " + itemWord 
+            Component.literal("§2§l[FOT] §8» §a✔ Scan complete! Recorded " 
+                + finalContainersCount + " " + containerWord + " (" + totalQuantitiesSum + " " + itemWord 
                 + ", " + totalUniqueEntries + " unique). JSON copied to clipboard & saved to file!")
         );
 
+        capturedContainersMap.clear();
         scannedContainers.clear();
         lastScannedContainerSignature = "";
     }
@@ -468,6 +521,9 @@ public class ScannerManager {
         return normalized
             .trim()
             .toLowerCase()
+            .replace("\u0027", "_")
+            .replace("'", "_")
+            .replace("’", "_")
             .replaceAll("§[0-9a-fk-or]", "")
             .replaceAll("&[0-9a-fk-or]", "")
             .replaceAll("[\uE000-\uF8FF]", "")

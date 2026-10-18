@@ -37,8 +37,9 @@ public class SuperchargeParser {
         String rarity = parseRarity(stack);
 
         String displayName = rarity + " " + climate + " Supercharge";
+        String uniqueKey = "supercharge_" + ScannerManager.normalizeToId(climate + "_" + rarity);
 
-        data.put("id", "supercharge_" + System.currentTimeMillis());
+        data.put("id", uniqueKey);
         data.put("isCustomItem", true);
         data.put("customType", "supercharge");
         data.put("climate", climate);
