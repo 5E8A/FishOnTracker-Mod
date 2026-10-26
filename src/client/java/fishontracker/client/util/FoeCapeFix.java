@@ -12,7 +12,6 @@ public class FoeCapeFix {
         }
 
         try {
-            // Sprawdzenie obecności na serwerze
             Class<?> connHandlerClass = Class.forName("dannypx.foe.handler.logic.ConnectionHandler");
             Method instanceMethod = connHandlerClass.getMethod("instance");
             Object connHandler = instanceMethod.invoke(null);
@@ -23,7 +22,6 @@ public class FoeCapeFix {
                 return false;
             }
 
-            // Odczytanie flagi hideArmor z Configs
             Class<?> configsClass = Class.forName("dannypx.foe.config.Configs");
             Field rendererConfigField = configsClass.getField("rendererConfig");
             Object rendererConfig = rendererConfigField.get(null);

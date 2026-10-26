@@ -5,7 +5,16 @@
 	"client": [
     "HandledScreenMixin",
 	"CapeOffsetMixin",
-	"SodiumWarningOverlayMixin"
+	"SodiumWarningOverlayMixin",
+	"AmuletStarMixin",
+	"PackSelectionModelMixin",
+	"BuiltInPackSourceMixin",
+	"TooltipRenderUtilMixin",
+	"GuiGraphicsExtractorMixin",
+	"GuiRenderStateMixin",
+	"GuiTextRenderStateMixin",
+	"BakedSheetGlyphAccessor",
+	"PreparedTextBuilderMixin"
   ],
 	"injectors": {
 		"defaultRequire": 1

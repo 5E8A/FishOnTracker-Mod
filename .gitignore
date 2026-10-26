@@ -10,4 +10,5 @@ bin/
 
 # Runtime / Client test data
 run/
+logs/
 .vscode/settings.json

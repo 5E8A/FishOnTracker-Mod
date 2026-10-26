@@ -10,11 +10,16 @@
 # ✨Features
 - Scans Chests and virtual containers after opening them
 - Exports detected items to clipboard and JSON file located in *config/fishontracker/exports*
+- Start/stop a scan with a key bind *(configurable, also found in Options > Controls > Key Binds > FishOnTracker)*
+- Optional profile data - username, level and cash can be left out of the export in the config
 - Prevents duplicate scans of the same container
 - Blocks scans from unintended containers such as Auction House, Menu etc.
+- Editable blacklists - adjust excluded items/containers in *config/fishontracker/blacklist_items.txt* and *config/fishontracker/blacklist_containers.txt* without recompiling (delete a file to restore defaults)
+- Automatically exports username, level, and cash balance
 - Supported Items:
   - **Armor** (Type, Rating, Rarity)
-  - **Pets** (Type, Rating, Rarity, Equipped Items, Equipped Skins)
+  - **Pets** (Type, Rating, Rarity, Equipped Items, Equipped Skins, Equipped Trails)
+  - **Pet Skins & Pet Trails** (standalone, unequipped cosmetics)
   - **Rod Parts** (Reels, Poles, Lines, additional applied Tech)
   - **Bait Packages** (Type, Rarity)
   - **Baits** (Type)
@@ -25,5 +30,11 @@
   - Chests on crew islands
   - Personal Vaults
   - Presets Menu
-- Fixes Cape Offset when FishOnExtras Armor rendering is off _(can be toggled in settings)_
-- Hides Sodium Incompatible Packs Waring _(can be toggled in settings)_
+- Fixes Cape Offset when FishOnExtras Armor rendering is off _(requires FishOnMC Extras, toggleable in config)_
+- Hides Sodium Incompatible Pack Warning _(requires Sodium, toggleable in config)_
+- Colored Pet Amulet Stars - draws a star matched to the amulet equipped on a pet instead of the default yellow one _(requires FishOnMC Extras, toggleable in config)_
+- Leaves Fix - removes broken leaves when using Sodium _(requires Sodium, toggleable in config)_
+- Short Rank Icons - smaller icons for ranks _(toggleable in config, off by default)_
+- Tooltip Fix - extends the fancy item tooltip frame to match the text width _(toggleable in config)_
+
+All toggles live in the mod config (Mod Menu), and the scan start/stop key bind is under **Options > Controls > Key Binds > FishOnTracker**.

@@ -35,6 +35,16 @@ dependencies {
   	implementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
     implementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
+
+    // Unit tests live in the default test source set but exercise client classes.
+    testImplementation sourceSets.client.output
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 processResources {
