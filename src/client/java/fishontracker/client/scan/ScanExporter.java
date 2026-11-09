@@ -3,9 +3,9 @@ package fishontracker.client.scan;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fishontracker.Fishontracker;
+import fishontracker.client.config.TrackerConfig;
 import fishontracker.client.util.ChatUtil;
 import fishontracker.client.util.TextUtil;
-import fishontracker.client.config.TrackerConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
@@ -59,22 +59,22 @@ final class ScanExporter {
         finalExport.put("version", "1.1");
         finalExport.put("username", profileValue(PlayerDataFetcher.getUsername(), ""));
         finalExport.put("level", profileValue(PlayerDataFetcher.getPlayerLevel(), 0));
-        finalExport.put("cash", profileValue(ScoreboardReader.getWalletBalance(), 0));
+        finalExport.put("cash", TrackerConfig.INSTANCE.includeCashBalance ? ScoreboardReader.getWalletBalance() : 0);
         finalExport.put("inventory", exportedList);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(finalExport);
 
         Minecraft client = Minecraft.getInstance();
-        client.keyboardHandler.setClipboard(json);
+        if (TrackerConfig.INSTANCE.autoCopyToClipboard) {
+            client.keyboardHandler.setClipboard(json);
+        }
         saveToFile(json);
 
         int containerCount = containers.size();
         int uniqueEntries = customById.size() + simpleById.size();
-        ChatUtil.chat("§a✔ Scan complete! Recorded "
-            + containerCount + " " + (containerCount == 1 ? "container" : "containers")
-            + " (" + totalQuantity + " " + (totalQuantity == 1 ? "item" : "items")
-            + ", " + uniqueEntries + " unique). JSON copied to clipboard & saved to file!");
+        String scanMessage = "\u00a7a\u25b6 Scan complete! Recorded " + containerCount + " " + (containerCount == 1 ? "container" : "containers") + " (" + totalQuantity + " " + (totalQuantity == 1 ? "item" : "items") + ", " + uniqueEntries + " unique). " + (TrackerConfig.INSTANCE.autoCopyToClipboard ? "JSON copied to clipboard & saved to file!" : "JSON saved to file!");
+        ChatUtil.chat(scanMessage);
     }
 
     private void aggregate() {

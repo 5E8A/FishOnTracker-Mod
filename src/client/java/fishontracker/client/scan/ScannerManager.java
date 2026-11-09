@@ -1,7 +1,10 @@
 package fishontracker.client.scan;
 
+import fishontracker.client.config.TrackerConfig;
 import fishontracker.client.util.ChatUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
@@ -32,7 +35,7 @@ public class ScannerManager {
 
     private static final Map<String, List<ItemStack>> capturedContainersMap = new LinkedHashMap<>();
     private static final Set<String> scannedContainers = new HashSet<>();
-    private static String lastScannedContainerSignature = "";
+    private static String lastAnnouncedScanned = "";
 
     private static final Pattern PRESET_PATTERN = Pattern.compile("preset.*?(\\d+)", Pattern.CASE_INSENSITIVE);
 
@@ -48,6 +51,10 @@ public class ScannerManager {
 
         isScanning = true;
         clearState();
+
+        if (TrackerConfig.INSTANCE.scanSounds) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F));
+        }
 
         ChatUtil.chat("§a✔ Scanning session started! Open chests to track items.");
     }
@@ -103,13 +110,13 @@ public class ScannerManager {
         String containerSignature = isPresetMenu ? presetSignature : buildContainerKey(containerId);
 
         if (scannedContainers.contains(containerSignature)) {
-            if (!containerSignature.equals(lastScannedContainerSignature)) {
+            if (!containerSignature.equals(lastAnnouncedScanned)) {
                 ChatUtil.overlay("§e⚠ Already scanned: " + displayTitle);
+                lastAnnouncedScanned = containerSignature;
             }
             return;
         }
 
-        lastScannedContainerSignature = containerSignature;
         scannedContainers.add(containerSignature);
 
         List<ItemStack> containerItemsList = new ArrayList<>();
@@ -284,6 +291,11 @@ public class ScannerManager {
         }
 
         isScanning = false;
+
+        if (TrackerConfig.INSTANCE.scanSounds) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
+
         ScanExporter.export(capturedContainersMap);
         clearState();
     }
@@ -291,6 +303,6 @@ public class ScannerManager {
     private static void clearState() {
         capturedContainersMap.clear();
         scannedContainers.clear();
-        lastScannedContainerSignature = "";
+        lastAnnouncedScanned = "";
     }
 }

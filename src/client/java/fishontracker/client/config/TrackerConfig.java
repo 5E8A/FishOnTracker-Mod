@@ -2,6 +2,7 @@ package fishontracker.client.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import dev.isxander.yacl3.api.ButtonOption;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
@@ -14,6 +15,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 
 import java.io.File;
 import java.io.FileReader;
@@ -36,9 +38,12 @@ public class TrackerConfig {
     public boolean hideSodiumWarning = true;
     public boolean coloredAmuletStars = true;
     public boolean includeProfileData = true;
+    public boolean includeCashBalance = true;
     public boolean leavesFix = true;
     public boolean shortRankIcons = false;
     public boolean tooltipFix = true;
+    public boolean scanSounds = true;
+    public boolean autoCopyToClipboard = true;
 
     public static void load() {
         if (FILE.exists()) {
@@ -112,7 +117,7 @@ public class TrackerConfig {
             .option(Option.<Boolean>createBuilder()
                 .name(Component.literal("Include Profile Data"))
                 .description(description(
-                    "Includes your username, level and cash balance in the exported JSON. "
+                    "Includes your username and level in the exported JSON. "
                         + "Turn this off if you only want to share the item list."))
                 .binding(
                     true,
@@ -120,6 +125,55 @@ public class TrackerConfig {
                     val -> INSTANCE.includeProfileData = val
                 )
                 .controller(BooleanControllerBuilder::create)
+                .build())
+            .option(Option.<Boolean>createBuilder()
+                .name(Component.literal("Include Cash Balance"))
+                .description(description(
+                    "Includes your cash balance in the exported JSON."))
+                .binding(
+                    true,
+                    () -> INSTANCE.includeCashBalance,
+                    val -> INSTANCE.includeCashBalance = val
+                )
+                .controller(BooleanControllerBuilder::create)
+                .build())
+            .option(Option.<Boolean>createBuilder()
+                .name(Component.literal("Scan Sounds"))
+                .description(description(
+                    "Plays a sound when a scan starts and stops."))
+                .binding(
+                    true,
+                    () -> INSTANCE.scanSounds,
+                    val -> INSTANCE.scanSounds = val
+                )
+                .controller(BooleanControllerBuilder::create)
+                .build())
+            .option(Option.<Boolean>createBuilder()
+                .name(Component.literal("Auto-Copy To Clipboard"))
+                .description(description(
+                    "Automatically copies the exported JSON to the clipboard after a scan."))
+                .binding(
+                    true,
+                    () -> INSTANCE.autoCopyToClipboard,
+                    val -> INSTANCE.autoCopyToClipboard = val
+                )
+                .controller(BooleanControllerBuilder::create)
+                .build())
+            .option(ButtonOption.createBuilder()
+                .name(Component.literal("Open Exports Folder"))
+                .text(Component.literal("Open"))
+                .description(description(
+                    "Opens the folder where scan exports are saved."))
+                .action((screen, option) -> {
+                    try {
+                        java.io.File dir = FabricLoader.getInstance().getConfigDir()
+                            .resolve("fishontracker/exports").toFile();
+                        if (!dir.exists()) dir.mkdirs();
+                        Util.getPlatform().openFile(dir);
+                    } catch (Exception e) {
+                        Fishontracker.LOGGER.error("Failed to open exports folder", e);
+                    }
+                })
                 .build())
             .build();
     }

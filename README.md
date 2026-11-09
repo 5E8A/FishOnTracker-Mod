@@ -11,10 +11,9 @@
 - Scans Chests and virtual containers after opening them
 - Exports detected items to clipboard and JSON file located in *config/fishontracker/exports*
 - Start/stop a scan with a key bind *(configurable, also found in Options > Controls > Key Binds > FishOnTracker)*
-- Optional profile data - username, level and cash can be left out of the export in the config
 - Prevents duplicate scans of the same container
 - Blocks scans from unintended containers such as Auction House, Menu etc.
-- Editable blacklists - adjust excluded items/containers in *config/fishontracker/blacklist_items.txt* and *config/fishontracker/blacklist_containers.txt* without recompiling (delete a file to restore defaults)
+- Editable blacklists - adjust excluded items/containers in *config/fishontracker/blacklist_items.txt* and *config/fishontracker/blacklist_containers.txt* (delete a file to restore defaults)
 - Automatically exports username, level, and cash balance
 - Supported Items:
   - **Armor** (Type, Rating, Rarity)

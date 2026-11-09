@@ -108,6 +108,7 @@ class TooltipFixContextTest {
 
         StretchedDividerRenderable tail = dividerQuad(growth);
         TooltipFixContext.pushDividerQuad(tail);
+        TooltipFixContext.setCurrentCodepoint(0xD001); // closed by a frame glyph
         TooltipFixContext.closeDividerRun();
 
         // A later run starts fresh and must not demote the previous run's tail.

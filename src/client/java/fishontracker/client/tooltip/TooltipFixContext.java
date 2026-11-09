@@ -137,8 +137,16 @@ public final class TooltipFixContext {
 
     /** Releases the width activated by {@link #activate(GuiTextRenderState)}. */
     public static void deactivate() {
+        if (dividerTail != null) {
+            // A run left open at the end of a text state is treated as stretchable by default
+            // (typically the bottom frame bar); short content bars are closed explicitly.
+            dividerTail.setStretchable(true);
+            dividerTail = null;
+        }
         activeBoxWidth = -1;
+        currentCodepoint = -1;
         dividerTail = null;
+        STAMPED.clear();
     }
 
     /**
@@ -178,7 +186,14 @@ public final class TooltipFixContext {
 
     /** Closes the current strikethrough run, e.g. because a non-strikethrough character followed. */
     public static void closeDividerRun() {
-        dividerTail = null;
+        if (dividerTail != null) {
+            // A run that is closed by a frame glyph is a frame horizontal bar and should grow
+            // with the frame. Runs closed by ordinary content (e.g. a pet's level progress
+            // bar) must keep their original length.
+            boolean stretchable = activeBoxWidth <= 0 || isFrameGlyph(currentCodepoint);
+            dividerTail.setStretchable(stretchable);
+            dividerTail = null;
+        }
     }
 
     /** Drops any leftover state, e.g. when the resource reload swaps the font during a frame. */

@@ -39,6 +39,9 @@ public final class StretchedDividerRenderable implements TextRenderable {
     /** Whether this quad is currently the last one of its run and should therefore grow. */
     private boolean tail = true;
 
+    /** Whether this run should be stretched at all (frame bars yes, pet progress bars no). */
+    private boolean stretchable = true;
+
     private TextRenderable original;
     private TextRenderable stretched;
 
@@ -66,8 +69,16 @@ public final class StretchedDividerRenderable implements TextRenderable {
         tail = false;
     }
 
+    /**
+     * Marks this quad's run as not stretchable (e.g. a pet progress bar), so it never grows
+     * even when it happens to be the tail of its run.
+     */
+    public void setStretchable(boolean stretchable) {
+        this.stretchable = stretchable;
+    }
+
     private TextRenderable current() {
-        if (tail && extension > 0.0F) {
+        if (tail && stretchable && extension > 0.0F) {
             if (stretched == null) {
                 stretched = factory.createEffect(x0, y0, x1 + extension, y1, depth, color, shadowColor, shadowOffset);
             }
@@ -112,7 +123,7 @@ public final class StretchedDividerRenderable implements TextRenderable {
 
     @Override
     public float right() {
-        return tail ? x1 + extension : x1;
+        return tail && stretchable ? x1 + extension : x1;
     }
 
     @Override
