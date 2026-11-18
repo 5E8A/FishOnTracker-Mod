@@ -69,7 +69,7 @@ public final class ConfigurablePackSource implements RepositorySource {
      * into the pack repository happens via {@code BuiltInPackSourceMixin}.
      */
     public static void register() {
-        add("leaves_fix", "Leaves Fix", () -> TrackerConfig.INSTANCE.leavesFix);
+        add("leaves_fix", "Leaves Fix", () -> FabricLoader.getInstance().isModLoaded("sodium") && TrackerConfig.INSTANCE.leavesFix);
         add("short_rank_icons", "Short Rank Icons", () -> TrackerConfig.INSTANCE.shortRankIcons);
         cleanupLegacyExtraction();
     }
