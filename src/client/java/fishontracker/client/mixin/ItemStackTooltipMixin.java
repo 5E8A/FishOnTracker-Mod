@@ -29,7 +29,7 @@ public class ItemStackTooltipMixin {
 
         ItemStack stack = (ItemStack) (Object) this;
         boolean isArmor = TrackerConfig.INSTANCE.shorterArmorTooltips && (stack.is(net.minecraft.world.item.Items.LEATHER_CHESTPLATE) || stack.is(net.minecraft.world.item.Items.LEATHER_LEGGINGS) || stack.is(net.minecraft.world.item.Items.LEATHER_BOOTS));
-        boolean isFish = TrackerConfig.INSTANCE.shorterFishTooltips && stack.is(net.minecraft.world.item.Items.COD);
+        boolean isFish = TrackerConfig.INSTANCE.shorterFishTooltips && (stack.is(net.minecraft.world.item.Items.COD) || stack.is(net.minecraft.world.item.Items.WHITE_DYE) || stack.is(net.minecraft.world.item.Items.BLACK_DYE) || stack.is(net.minecraft.world.item.Items.GOLD_INGOT) || stack.is(net.minecraft.world.item.Items.DRIED_KELP) || stack.is(net.minecraft.world.item.Items.PRISMARINE_SHARD) || stack.is(net.minecraft.world.item.Items.BONE) || stack.is(net.minecraft.world.item.Items.ROTTEN_FLESH));
         boolean isPet = TrackerConfig.INSTANCE.shorterPetTooltips && stack.is(net.minecraft.world.item.Items.PLAYER_HEAD) && (PetParser.isPet(stack) || isPetByLore(stack));
         if (!isArmor && !isFish && !isPet) return;
 
