@@ -42,6 +42,9 @@ public class TrackerConfig {
     public boolean leavesFix = true;
     public boolean shortRankIcons = false;
     public boolean tooltipFix = true;
+    public boolean shorterArmorTooltips = false;
+    public boolean shorterFishTooltips = false;
+    public boolean shorterPetTooltips = false;
     public boolean scanSounds = true;
     public boolean autoCopyToClipboard = true;
 
@@ -52,11 +55,24 @@ public class TrackerConfig {
                 if (INSTANCE == null) {
                     INSTANCE = new TrackerConfig();
                 }
+                // Migrate configs written before the shorter-tooltip / scan options existed.
+                migrateMissingFields();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
             save();
+        }
+    }
+
+    private static void migrateMissingFields() {
+        try {
+            String raw = new String(java.nio.file.Files.readAllBytes(FILE.toPath()));
+            if (!raw.contains("\"scanSounds\"")) INSTANCE.scanSounds = true;
+            if (!raw.contains("\"autoCopyToClipboard\"")) INSTANCE.autoCopyToClipboard = true;
+            if (!raw.contains("\"includeCashBalance\"")) INSTANCE.includeCashBalance = true;
+            save();
+        } catch (Exception ignored) {
         }
     }
 
@@ -269,6 +285,42 @@ public class TrackerConfig {
                         true,
                         () -> INSTANCE.tooltipFix,
                         val -> INSTANCE.tooltipFix = val
+                    )
+                    .controller(BooleanControllerBuilder::create)
+                    .build())
+                .build())
+            .group(OptionGroup.createBuilder()
+                .name(Component.literal("Shorter Tooltips"))
+                .option(Option.<Boolean>createBuilder()
+                    .name(Component.literal("Shorter Armor Tooltips"))
+                    .description(description(
+                        "Removes the hint lines from armor tooltips."))
+                    .binding(
+                        false,
+                        () -> INSTANCE.shorterArmorTooltips,
+                        val -> INSTANCE.shorterArmorTooltips = val
+                    )
+                    .controller(BooleanControllerBuilder::create)
+                    .build())
+                .option(Option.<Boolean>createBuilder()
+                    .name(Component.literal("Shorter Fish Tooltips"))
+                    .description(description(
+                        "Removes the Latin name and ecosystem lines from fish tooltips."))
+                    .binding(
+                        false,
+                        () -> INSTANCE.shorterFishTooltips,
+                        val -> INSTANCE.shorterFishTooltips = val
+                    )
+                    .controller(BooleanControllerBuilder::create)
+                    .build())
+                .option(Option.<Boolean>createBuilder()
+                    .name(Component.literal("Shorter Pet Tooltips"))
+                    .description(description(
+                        "Removes the climate name and empty equipped slots from pet tooltips."))
+                    .binding(
+                        false,
+                        () -> INSTANCE.shorterPetTooltips,
+                        val -> INSTANCE.shorterPetTooltips = val
                     )
                     .controller(BooleanControllerBuilder::create)
                     .build())
